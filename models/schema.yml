@@ -1,0 +1,117 @@
+version: 2
+
+models:
+
+  # ── STAGING ────────────────────────────────────────────────────────────────
+
+  - name: stg_customers
+    description: "Cleaned customer records from Fivetran CDC. Deleted rows filtered."
+    columns:
+      - name: customer_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        tests:
+          - not_null
+          - unique
+      - name: loyalty_tier
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['standard', 'silver', 'gold', 'platinum']
+
+  - name: stg_orders
+    description: "Cleaned orders. net_revenue and order_type derived. Incrementally loaded."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: order_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned']
+
+  - name: stg_products
+    description: "Active products. Includes schema-change columns (warehouse_location, return_rate_pct, supplier_sku)."
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: sku
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_order_items
+    description: "Order line items. Filtered for non-deleted rows."
+    columns:
+      - name: item_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_inventory_events
+    description: "Append-only inventory movement log."
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+
+  # ── INTERMEDIATE ───────────────────────────────────────────────────────────
+
+  - name: int_customer_lifetime_value
+    description: "Customer LTV, RFM scoring, and segmentation. Feeds dim_customers."
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_segment
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['champion', 'loyal', 'at_risk', 'lapsed']
+
+  # ── MARTS ──────────────────────────────────────────────────────────────────
+
+  - name: dim_customers
+    description: >
+      Analytics-ready customer dimension. Powers Klaviyo CMO segments,
+      CFO customer report, and ML churn model feature store.
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: email
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_orders
+    description: >
+      CFO trading dashboard fact table. Orders enriched with customer context
+      and UTM marketing attribution. Incrementally loaded.
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_inventory_snapshot
+    description: >
+      Real-time inventory position per SKU per location.
+      Powers Head of E-Commerce stock dashboard and ML demand forecasting.
+    columns:
+      - name: product_id
+        tests:
+          - not_null

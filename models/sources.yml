@@ -1,0 +1,46 @@
+version: 2
+
+sources:
+  - name: northshelf_raw
+    database: FIVETRAN_DATABASE        # your Snowflake database name — update if different
+    schema: MYSQL_RDS_2_NORTHSHELF           # the schema Fivetran auto-creates (connector name)
+    description: "Raw tables replicated from NorthShelf MySQL RDS via Fivetran CDC"
+    tables:
+      - name: customers
+        description: "Customer master data with loyalty programme"
+        columns:
+          - name: _fivetran_deleted
+            description: "TRUE if the row was deleted at source — filtered in staging"
+          - name: _fivetran_synced
+            description: "Timestamp of last Fivetran sync — used as incremental watermark"
+      - name: orders
+        description: "All orders across web, mobile, in-store, and B2B channels"
+        columns:
+          - name: _fivetran_deleted
+            description: "TRUE if order was hard-deleted at source"
+          - name: _fivetran_synced
+            description: "Timestamp of last Fivetran sync"
+      - name: order_items
+        description: "Line items for each order"
+        columns:
+          - name: _fivetran_deleted
+            description: "TRUE if row was deleted at source"
+          - name: _fivetran_synced
+            description: "Timestamp of last Fivetran sync"
+      - name: products
+        description: "Product catalogue including new schema-change columns"
+        columns:
+          - name: _fivetran_deleted
+            description: "TRUE if product was deleted at source"
+          - name: _fivetran_synced
+            description: "Timestamp of last Fivetran sync"
+      - name: inventory_events
+        description: "Append-only log of all stock movements"
+        columns:
+          - name: _fivetran_synced
+            description: "Timestamp of last Fivetran sync"
+      - name: order_metadata
+        description: "UTM attribution and device data — added in Scene 3 schema change"
+        columns:
+          - name: _fivetran_synced
+            description: "Timestamp of last Fivetran sync"
