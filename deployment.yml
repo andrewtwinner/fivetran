@@ -1,0 +1,13 @@
+jobs:
+  - name: northshelf_after_sync
+    schedule:
+      type: integrated
+      integrations:
+        - absently_ashes
+    timeout: 1h
+    retryOnFailure: true
+    steps:
+      - name: run all models
+        command: dbt run
+      - name: test all models
+        command: dbt test
