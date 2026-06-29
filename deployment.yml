@@ -11,12 +11,3 @@ jobs:
         command: dbt run
       - name: test all models
         command: dbt test
-        
-  - name: northshelf_full_refresh
-    schedule:
-      type: manual            # only runs when YOU click Run in Fivetran UI
-    timeout: 1h
-    retryOnFailure: false
-    steps:
-      - name: full refresh all models
-        command: dbt run --full-refresh
